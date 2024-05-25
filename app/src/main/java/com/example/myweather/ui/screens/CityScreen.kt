@@ -42,10 +42,7 @@ import com.example.myweather.api.cityLookup.Location
 import kotlinx.coroutines.delay
 
 @Composable
-fun CityScreen(cityList: List<Location>?, onDelete: (String) -> Unit, onSelect: (String) -> Unit, onAddCity: () -> Unit) {
-    LaunchedEffect(cityList) {
-        Log.d("CityScreen", "City list: $cityList")
-    }
+fun CityScreen(cityList: List<Location>?, onDelete: (String) -> Unit, onSelect: (Location) -> Unit, onAddCity: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -60,12 +57,12 @@ fun CityScreen(cityList: List<Location>?, onDelete: (String) -> Unit, onSelect: 
         ) {
             items(cityList?.size ?: 0) { index ->
                 SwipeToDeleteContainer(
-                    item = cityList!![index].name,
-                    onDelete = { cityName ->
-                        onDelete(cityName)
+                    item = cityList!![index],
+                    onDelete = { location ->
+                        onDelete(location.name)
                     }
-                ) { cityName ->
-                    CityItem(cityName = cityName, onSelect = onSelect)
+                ) { location ->
+                    CityItem(location = location, onSelect = onSelect)
                 }
             }
         }
@@ -79,13 +76,13 @@ fun CityScreen(cityList: List<Location>?, onDelete: (String) -> Unit, onSelect: 
 }
 
 @Composable
-fun CityItem(cityName: String, onSelect: (String) -> Unit) {
+fun CityItem(location: Location, onSelect: (Location) -> Unit) {
     Text(
-        text = cityName,
+        text = location.name,
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.background)
-            .clickable(onClick = { onSelect(cityName) })
+            .clickable(onClick = { onSelect(location) })
             .padding(16.dp)
     )
 }

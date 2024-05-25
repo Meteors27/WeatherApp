@@ -29,12 +29,18 @@ fun WeatherApp(viewModel: WeatherViewModel = viewModel(),
     val weather3Days = viewModel.weather3DaysResult.observeAsState()
 //    val cityList = viewModel.cityList.observeAsState()
     val cityList by viewModel.cityList.collectAsState()
+    val currentLocation by viewModel.currentLocation.collectAsState()
 
     NavHost(navController = navController, startDestination = WeatherAppScreen.Main.name) {
         composable(WeatherAppScreen.Main.name) {
             MainScreen(
+                location = currentLocation,
                 weatherNow = weatherNow.value,
                 weather3Days = weather3Days.value,
+                onRefresh = {
+                    viewModel.getWeatherNow(viewModel.currentLocation.value.id)
+                    viewModel.getWeather3Days(viewModel.currentLocation.value.id)
+                },
                 onCityButtonClicked = { navController.navigate(WeatherAppScreen.City.name) }
             )
         }
@@ -42,7 +48,10 @@ fun WeatherApp(viewModel: WeatherViewModel = viewModel(),
             CityScreen(
                 cityList = cityList,
                 onDelete = { viewModel.deleteCity(it) },
-                onSelect = { navController.navigate(WeatherAppScreen.Main.name) },
+                onSelect = {
+                    viewModel.setCurrentLocation(it)
+                    navController.navigate(WeatherAppScreen.Main.name)
+                           },
                 onAddCity = { navController.navigate(WeatherAppScreen.AddCity.name) }
             )
         }

@@ -11,10 +11,10 @@ import com.example.myweather.api.RetrofitInstance
 import com.example.myweather.api.cityLookup.Location
 import com.example.myweather.api.weather3Days.Weather3Days
 import com.example.myweather.api.weatherNow.WeatherNow
+import com.example.myweather.data.LocationBeijing
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.lang.Exception
 
@@ -34,10 +34,14 @@ class WeatherViewModel : ViewModel() {
 //    private val _cityList = MutableLiveData<List<Location>>()
 //    val cityList : LiveData<List<Location>> = _cityList
 
-    private val _cityList = MutableStateFlow(listOf<Location>())
+    private val _cityList = MutableStateFlow(listOf<Location>(LocationBeijing))
     val cityList : StateFlow<List<Location>> = _cityList.asStateFlow()
 
+    private val _currentLocation = MutableStateFlow(LocationBeijing)
+    val currentLocation : StateFlow<Location> = _currentLocation.asStateFlow()
+
     fun getWeatherNow(locationId : String) {
+        Log.d("WeatherViewModel", "getWeatherNow")
         _weatherNowResult.value = NetworkResponse.Loading
         viewModelScope.launch {
             val response = weatherApi.getWeatherNow(Constant.apiKey, locationId)
@@ -61,6 +65,7 @@ class WeatherViewModel : ViewModel() {
     }
 
     fun getWeather3Days(locationId : String) {
+        Log.d("WeatherViewModel", "getWeather3Days")
         viewModelScope.launch {
             try {
                 val response = weatherApi.getWeather3Days(Constant.apiKey, locationId)
@@ -79,6 +84,7 @@ class WeatherViewModel : ViewModel() {
     }
 
     fun getCityList(location : String) {
+        Log.d("WeatherViewModel", "getCityList")
         viewModelScope.launch {
             try {
                 val response = geoApi.getCity(Constant.apiKey, location)
@@ -113,5 +119,9 @@ class WeatherViewModel : ViewModel() {
 
     fun deleteCity(locationId: String) {
         _cityList.value = _cityList.value.filter { it.id != locationId }
+    }
+
+    fun setCurrentLocation(location: Location) {
+        _currentLocation.value = location
     }
 }

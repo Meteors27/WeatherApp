@@ -36,7 +36,7 @@ fun AddCityScreen(
     }
 
     Column(
-        modifier = androidx.compose.ui.Modifier.padding(8.dp),
+        modifier = Modifier.padding(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Row(

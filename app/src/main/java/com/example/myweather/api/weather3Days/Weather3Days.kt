@@ -4,6 +4,6 @@ data class Weather3Days(
     val code: String,
     val daily: List<Daily>,
     val fxLink: String,
-    val refer: Refer,
+    val refer: Refer?,
     val updateTime: String
 )
