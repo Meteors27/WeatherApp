@@ -34,7 +34,7 @@ class WeatherViewModel : ViewModel() {
 //    private val _cityList = MutableLiveData<List<Location>>()
 //    val cityList : LiveData<List<Location>> = _cityList
 
-    private val _cityList = MutableStateFlow(listOf<Location>(LocationBeijing))
+    private val _cityList = MutableStateFlow(listOf<Location>())
     val cityList : StateFlow<List<Location>> = _cityList.asStateFlow()
 
     private val _currentLocation = MutableStateFlow(LocationBeijing)
@@ -113,8 +113,19 @@ class WeatherViewModel : ViewModel() {
     }
 
     fun addCity(location: Location) {
+        if (location.id in _cityList.value.map { it.id }) {
+            return
+        }
         _cityList.value += location
         Log.d("AddCityList", "City list: ${_cityList.value})")
+    }
+
+    fun setAsFirstCity(location: Location) {
+        // delete the first item in the list
+        if (_cityList.value.isNotEmpty()) {
+            _cityList.value.drop(1)
+        }
+        _cityList.value = listOf(location) + _cityList.value
     }
 
     fun deleteCity(locationId: String) {

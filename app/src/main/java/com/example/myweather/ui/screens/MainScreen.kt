@@ -1,5 +1,6 @@
 package com.example.myweather.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -86,10 +87,10 @@ fun MainScreen(
                 WeatherNowItem(weatherNow.data)
             }
             is NetworkResponse.Error -> {
-                Text("Error: ${weatherNow.message}")
+                Log.d("MainScreen", "Error: ${weatherNow.message}")
             }
             is NetworkResponse.Loading -> {
-                Text("Loading...")
+                Log.i("MainScreen", "Loading...")
             }
             null -> {}
         }
@@ -103,10 +104,10 @@ fun MainScreen(
                 }
             }
             is NetworkResponse.Error -> {
-                Text("Error: ${weather3Days.message}")
+                Log.d("MainScreen", "Error: ${weather3Days.message}")
             }
             is NetworkResponse.Loading -> {
-                Text("Loading...")
+                Log.i("MainScreen", "Loading...")
             }
             null -> {}
         }
@@ -399,6 +400,18 @@ fun MainScreenPreview() {
                 refer = null
             )
         ),
+        onCityButtonClicked = {},
+        onRefresh = {}
+    )
+}
+
+@Preview
+@Composable
+fun MainScreenPreviewError() {
+    MainScreen(
+        location = LocationBeijing,
+        weatherNow = NetworkResponse.Error("Error: Network error"),
+        weather3Days = NetworkResponse.Error("Error: Network error"),
         onCityButtonClicked = {},
         onRefresh = {}
     )
