@@ -1,23 +1,33 @@
 package com.example.myweather.ui.screens
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.myweather.R
 import com.example.myweather.api.NetworkResponse
 import com.example.myweather.api.cityLookup.Location
@@ -28,6 +38,9 @@ import com.example.myweather.api.weatherNow.Refer
 import com.example.myweather.api.weatherNow.WeatherNow
 import com.example.myweather.data.LocationBeijing
 import com.example.myweather.data.QweatherIcon
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 @Composable
 fun MainScreen(
@@ -37,7 +50,6 @@ fun MainScreen(
     onCityButtonClicked: () -> Unit,
     onRefresh: () -> Unit
 ) {
-    // TODO
     LaunchedEffect(Unit) {
         onRefresh()
     }
@@ -62,8 +74,12 @@ fun MainScreen(
             }
         }
 
-        Text(location.name)
-        Text(location.adm1 + ", " + location.adm2)
+        Text(location.name,
+            style = MaterialTheme.typography.titleLarge
+        )
+        Text(location.adm1 + ", " + location.adm2,
+            style = MaterialTheme.typography.titleSmall
+        )
 
         when(weatherNow) {
             is NetworkResponse.Success -> {
@@ -98,31 +114,160 @@ fun MainScreen(
 }
 
 @Composable
+fun DisplayFormattedDate(dateString: String) {
+    val formattedDate = formatDateTime(dateString)
+    Text(text = formattedDate)
+}
+
+fun formatDateTime(dateString: String): String {
+    val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mmXXX", Locale.getDefault())
+    val outputDateFormat = SimpleDateFormat("MM/dd, HH:mm", Locale.getDefault())
+    val outputTimeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+    val outputYearFormat = SimpleDateFormat("yyyy/MM/dd", Locale.getDefault())
+
+    val date = inputFormat.parse(dateString)
+    val currentDate = Calendar.getInstance().time
+
+    val inputCalendar = Calendar.getInstance().apply { time = date }
+    val currentCalendar = Calendar.getInstance().apply { time = currentDate }
+
+    return if (inputCalendar.get(Calendar.YEAR) == currentCalendar.get(Calendar.YEAR) &&
+        inputCalendar.get(Calendar.DAY_OF_YEAR) == currentCalendar.get(Calendar.DAY_OF_YEAR)) {
+        outputTimeFormat.format(date)
+    } else if (inputCalendar.get(Calendar.YEAR) == currentCalendar.get(Calendar.YEAR)) {
+        outputDateFormat.format(date)
+    } else {
+        outputYearFormat.format(date)
+    }
+}
+
+@Composable
 fun WeatherNowItem(weatherNow: WeatherNow) {
-    // icon from xml
-    QweatherIcon(id = 101)
-    Text(weatherNow.now.temp + "°C")
-    Text(weatherNow.now.text)
-    Text(weatherNow.now.windDir + " " + weatherNow.now.windScale + "级")
-    Text("湿度: " + weatherNow.now.humidity + "%")
-    Text("降水量: " + weatherNow.now.precip + "mm")
-    Text("气压: " + weatherNow.now.pressure + "hPa")
-    Text("能见度: " + weatherNow.now.vis + "km")
-    Text("云量: " + weatherNow.now.cloud + "%")
-    Text("露点: " + weatherNow.now.dew + "°C")
-    Text("体感温度: " + weatherNow.now.feelsLike + "°C")
-    Text("更新时间: " + weatherNow.updateTime)
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(bottom = 60.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    )
+    {
+        DisplayFormattedDate(dateString = weatherNow.now.obsTime)
+        QweatherIcon(
+            id = weatherNow.now.icon.toInt(),
+            modifier = Modifier
+                .size(120.dp)
+                .padding(top = 60.dp)
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 20.dp),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Spacer(modifier = Modifier.width(40.dp))
+            Text(
+                weatherNow.now.temp,
+                fontSize = 60.sp,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+            )
+            Text(
+                "°",
+                fontSize = 60.sp,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                modifier = Modifier.width(40.dp)
+            )
+        }
+
+        Text(weatherNow.now.text,
+            modifier = Modifier.padding(top = 10.dp, bottom = 30.dp))
+
+        Row {
+            WeatherDetail(
+                title = R.string.wind_speed,
+                value = weatherNow.now.windSpeed + " km/h",
+                iconId = 2208
+            )
+            Spacer(modifier = Modifier.width(20.dp))
+            WeatherDetail(
+                title = R.string.humidity,
+                value = weatherNow.now.humidity + " %",
+                iconId = 399
+            )
+            Spacer(modifier = Modifier.width(20.dp))
+            WeatherDetail(
+                title = R.string.pressure,
+                value = weatherNow.now.pressure + " hPa",
+                iconId = 2210
+            )
+        }
+    }
+}
+
+@Composable
+fun WeatherDetail(title: Int, value: String, iconId: Int) {
+    Column(
+        modifier = Modifier
+            .padding(8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(stringResource(id = title),
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        Row (
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            QweatherIcon(
+                id = iconId,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(value)
+
+        }
+    }
 }
 
 @Composable
 fun WeatherDailyItem(daily: Daily) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 40.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(daily.fxDate)
-        // icon
-        Text(daily.tempMin + " / " + daily.tempMax)
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val date = inputFormat.parse(daily.fxDate)
+        val calendar = Calendar.getInstance().apply { time = date }
+        val dayOfWeekFormat = SimpleDateFormat("EEEE", Locale.ENGLISH)
+        val dayOfWeek = dayOfWeekFormat.format(date)
+        // if is today, show "Today"
+        if (calendar.get(Calendar.YEAR) == Calendar.getInstance().get(Calendar.YEAR) &&
+            calendar.get(Calendar.DAY_OF_YEAR) == Calendar.getInstance().get(Calendar.DAY_OF_YEAR)) {
+            Text(stringResource(id = R.string.today))
+        } else {
+            when(dayOfWeek) {
+                "Monday" -> Text(stringResource(id = R.string.monday))
+                "Tuesday" -> Text(stringResource(id = R.string.tuesday))
+                "Wednesday" -> Text(stringResource(id = R.string.wednesday))
+                "Thursday" -> Text(stringResource(id = R.string.thursday))
+                "Friday" -> Text(stringResource(id = R.string.friday))
+                "Saturday" -> Text(stringResource(id = R.string.saturday))
+                "Sunday" -> Text(stringResource(id = R.string.sunday))
+                else -> { Text(dayOfWeek) }
+            }
+        }
+        QweatherIcon(
+            id = daily.iconDay.toInt(),
+        )
+        Row{
+            Text(daily.tempMax + "°",
+                modifier = Modifier
+                    .width(30.dp)
+                    .wrapContentWidth(Alignment.End)
+            )
+            Text(daily.tempMin + "°",
+                modifier = Modifier
+                    .width(30.dp)
+                    .wrapContentWidth(Alignment.End)
+            )
+        }
 
     }
 }

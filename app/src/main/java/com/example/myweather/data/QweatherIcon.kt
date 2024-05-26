@@ -10,7 +10,10 @@ import androidx.compose.ui.unit.dp
 import com.example.myweather.R
 
 @Composable
-fun QweatherIcon(id: Int) {
+fun QweatherIcon(
+    id: Int = 0,
+    modifier: Modifier = Modifier
+) {
     val context = LocalContext.current
     val drawableName = "qweather$id"
     val drawableResId = context.resources.getIdentifier(drawableName, "drawable", context.packageName)
@@ -19,14 +22,14 @@ fun QweatherIcon(id: Int) {
         Image(
             painter = painterResource(id = drawableResId),
             contentDescription = null,
-            modifier = Modifier.size(48.dp)
+            modifier = modifier
         )
     } else {
         // 处理资源ID未找到的情况
         Image(
             painter = painterResource(id = R.drawable.qweatherqweather),
-            contentDescription = "Default icon",
-            modifier = Modifier.size(48.dp)
+            contentDescription = null,
+            modifier = modifier
         )
     }
 }
