@@ -3,6 +3,7 @@ package com.example.myweather.ui.screens
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,14 +13,25 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.ListItem
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -38,10 +50,13 @@ import com.example.myweather.api.weatherNow.Refer
 import com.example.myweather.api.weatherNow.WeatherNow
 import com.example.myweather.data.LocationBeijing
 import com.example.myweather.data.QweatherIcon
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun MainScreen(
     location: Location,
@@ -53,63 +68,84 @@ fun MainScreen(
     LaunchedEffect(Unit) {
         onRefresh()
     }
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+    val refreshScope = rememberCoroutineScope()
+    var refreshing by remember { mutableStateOf(false) }
 
-    ){
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End,
-            verticalAlignment = Alignment.Bottom
+    fun refresh() = refreshScope.launch {
+        refreshing = true
+        onRefresh()
+        delay(1000)
+        refreshing = false
+    }
 
-        ) {
-            IconButton(onClick = { onCityButtonClicked() }) {
-                Icon(
-                    imageVector = Icons.Default.List,
-                    contentDescription = "City list"
-                )
-            }
-        }
+    val state = rememberPullRefreshState(refreshing, ::refresh)
 
-        Text(location.name,
-            style = MaterialTheme.typography.titleLarge
-        )
-        Text(location.adm1 + ", " + location.adm2,
-            style = MaterialTheme.typography.titleSmall
-        )
+    Box(Modifier.pullRefresh(state)) {
+        LazyColumn(Modifier.fillMaxSize()) {
+            if (!refreshing) {
+                item {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
 
-        when(weatherNow) {
-            is NetworkResponse.Success -> {
-                WeatherNowItem(weatherNow.data)
-            }
-            is NetworkResponse.Error -> {
-                Text("Error: ${weatherNow.message}")
-            }
-            is NetworkResponse.Loading -> {
-                Text("Loading...")
-            }
-            null -> {}
-        }
+                    ){
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End,
+                            verticalAlignment = Alignment.Bottom
 
-        when(weather3Days) {
-            is NetworkResponse.Success -> {
-                Column {
-                    weather3Days.data.daily.forEach {
-                        WeatherDailyItem(it)
+                        ) {
+                            IconButton(onClick = { onCityButtonClicked() }) {
+                                Icon(
+                                    imageVector = Icons.Default.List,
+                                    contentDescription = "City list"
+                                )
+                            }
+                        }
+
+                        Text(location.name,
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                        Text(location.adm1 + ", " + location.adm2,
+                            style = MaterialTheme.typography.titleSmall
+                        )
+
+                        when(weatherNow) {
+                            is NetworkResponse.Success -> {
+                                WeatherNowItem(weatherNow.data)
+                            }
+                            is NetworkResponse.Error -> {
+                                Text("Error: ${weatherNow.message}")
+                            }
+                            is NetworkResponse.Loading -> {
+                                Text("Loading...")
+                            }
+                            null -> {}
+                        }
+
+                        when(weather3Days) {
+                            is NetworkResponse.Success -> {
+                                Column {
+                                    weather3Days.data.daily.forEach {
+                                        WeatherDailyItem(it)
+                                    }
+                                }
+                            }
+                            is NetworkResponse.Error -> {
+                                Text("Error: ${weather3Days.message}")
+                            }
+                            is NetworkResponse.Loading -> {
+                                Text("Loading...")
+                            }
+                            null -> {}
+                        }
                     }
                 }
             }
-            is NetworkResponse.Error -> {
-                Text("Error: ${weather3Days.message}")
-            }
-            is NetworkResponse.Loading -> {
-                Text("Loading...")
-            }
-            null -> {}
         }
+        PullRefreshIndicator(refreshing, state, Modifier.align(Alignment.TopCenter))
     }
 }
 
